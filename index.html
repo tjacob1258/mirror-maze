@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mirror Maze</title>
+  <meta name="description" content="A walkable VR mirror maze with live reflections, built with A-Frame.">
+  <script src="vendor/aframe-1.7.1.min.js"></script>
+  <script src="js/reflector.js"></script>
+  <script src="js/mirror-maze.js"></script>
+  <style>
+    #hud {
+      position: fixed; left: 16px; top: 16px; z-index: 10;
+      max-width: calc(100vw - 32px); padding: 10px 14px; border-radius: 10px;
+      background: rgba(10, 14, 20, 0.72); color: #f2f4f7;
+      font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      pointer-events: none; transition: opacity 0.6s;
+    }
+    #hud b { color: #fff; }
+    #hud.hidden { opacity: 0; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>Mirror Maze</b><br>
+    Click to look around &middot; <b>W A S D</b> to walk &middot; <b>Esc</b> to release the mouse<br>
+    Headset: press <b>VR</b> (bottom right), left stick to walk, right stick to turn
+  </div>
+
+  <a-scene
+    renderer="antialias: true; colorManagement: true; toneMapping: ACESFilmic; exposure: 1"
+    mirror-maze="model: #maze; pool: 4; vrPool: 2"
+    loading-screen="dotsColor: #ffffff; backgroundColor: #20242a">
+
+    <a-assets timeout="20000">
+      <a-asset-item id="maze-glb" src="models/maze.glb"></a-asset-item>
+      <a-asset-item id="avatar-glb" src="models/avatar.glb"></a-asset-item>
+    </a-assets>
+
+    <!-- The maze exported from Blender (glTF, Y-up) -->
+    <a-entity id="maze" gltf-model="#maze-glb"></a-entity>
+
+    <!-- Your avatar: follows you, hidden from your own view, visible in mirrors -->
+    <a-entity id="avatar" gltf-model="#avatar-glb" walk-avatar="backOffset: 0.3"></a-entity>
+
+    <!-- Floor, sky and light -->
+    <a-plane rotation="-90 0 0" width="400" height="400" color="#5d5f63"
+             material="roughness: 0.95; metalness: 0"></a-plane>
+    <a-sky color="#a9c6e3"></a-sky>
+    <a-entity light="type: hemisphere; color: #ffffff; groundColor: #6b6255; intensity: 1.6"></a-entity>
+    <a-entity light="type: directional; color: #fff6e8; intensity: 1.4" position="-3 8 4"></a-entity>
+
+    <!-- You: start in a corridor, facing a mirror -->
+    <a-entity id="rig" position="47.6 0 0" rotation="0 180 0">
+      <a-entity id="head" camera position="0 1.6 0"
+                look-controls="pointerLockEnabled: true"
+                wasd-controls="acceleration: 25"
+                wall-collide="radius: 0.3"></a-entity>
+      <a-entity meta-touch-controls="hand: left" stick-walk="rig: #rig"></a-entity>
+      <a-entity meta-touch-controls="hand: right" stick-walk="rig: #rig"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script>
+    // Fade the instructions once you start looking around
+    const hud = document.getElementById('hud');
+    document.addEventListener('pointerlockchange', () => {
+      hud.classList.toggle('hidden', !!document.pointerLockElement);
+    });
+  </script>
+</body>
+</html>
